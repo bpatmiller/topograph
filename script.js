@@ -1,19 +1,60 @@
-var canvas,ctx,drawStep;
+var canvas,ctx;
+var data;
+
+// declare controller datatype
+var controlTemplate = function() {
+  this.drawStep = 4;
+  this.scale = 7;
+  this.falloff = 0.4;
+  this.colors = 6;
+  // denotes how many colors/shades of grey can be seen
+}
+
+// load controller/gui
+var controlData = new controlTemplate();
+var gui = new dat.GUI();
+
+// create controls
+var ctrlDrawStep = gui.add(controlData,'drawStep',1,4,1);
+var ctrlScale = gui.add(controlData,'scale',1,10);
+var ctrlFalloff = gui.add(controlData,'falloff',0.1,1);
+var ctrlColors = gui.add(controlData,'colors',1,50,1);
+var regenControls = [ctrlFalloff,ctrlScale,ctrlDrawStep];
+var redrawControls = [ctrlColors];
+
+for (var i = 0; i < regenControls.length; i++) {
+  regenControls[i].onChange(function() {
+    console.log('regenerate');
+    generate();
+    ctx.fillStyle = 'white';
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    draw();
+  });
+}
+
+for (var i = 0; i < redrawControls.length; i++) {
+  redrawControls[i].onChange(function() {
+    console.log('just redraw');
+    ctx.fillStyle = 'white';
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    draw();
+  });
+}
 
 var main = function() {
-  var size = 6;
-  var scale = 7;
-  drawStep = 4;
-  var falloff = 0.4;
-
   // load canvas
   canvas = document.getElementById('canvas');  
   canvas.width =  window.innerWidth;
   canvas.height = window.innerHeight;
   ctx = canvas.getContext('2d');
 
-  width = Math.floor(canvas.width/drawStep);
-  height = Math.floor(canvas.height/drawStep);
+  generate();
+  draw();
+}
+
+var generate = function() {
+  width = Math.floor(canvas.width/controlData.drawStep);
+  height = Math.floor(canvas.height/controlData.drawStep);
 
   // assign random vals to the corners
   var p1 = Math.random();
@@ -22,25 +63,58 @@ var main = function() {
   var p4 = Math.random();
 
   // begin the recursion
-  var data = splitRect(falloff,scale,width,height,p1,p2,p3,p4);
-  // draw the resulting matrix
-  draw(data);
+  data = splitRect(controlData.falloff,controlData.scale,width,height,p1,p2,p3,p4);
 }
 
-var draw = function(data) {
+var draw = function() {
   width = data[0].length;
   height = data.length;
+  //var avg = 0;
+  var colorData = data;
 
-  var avg = 0;
   for(let x=0;x<width;x++) {
     for(let y=0;y<height;y++) {
-      var col = Math.floor(150 * data[x][y]);
-      avg+=data[x][y];
-      ctx.fillStyle =   'rgb(' + col + ',' + col + ',' + col + ')';
-      ctx.fillRect(x*drawStep,y*drawStep,drawStep,drawStep);
+      var colors = controlData.colors;
+      var col = colors * Math.floor((150/ colors)*data[x][y]);
+      colorData[x][y] = col;
+
+      //avg+=data[x][y];
+      //ctx.fillStyle = 'rgb(' + col + ',' + col + ',' + col + ')';
+      //ctx.fillRect(x*controlData.drawStep,y*controlData.drawStep,controlData.drawStep,controlData.drawStep);
     }
   }
-  console.log("average:",avg/(width*height));
+
+  for(let x=1;x<width-1;x++) {
+    for(let y=1;y<height-1;y++) {
+  
+      border = false;
+      tl = colorData[x-1][y-1];
+      tm = colorData[x][y-1];
+      tr = colorData[x+1][y-1];
+      ml = colorData[x-1][y];
+      mr = colorData[x+1][y];
+      bl = colorData[x-1][y+1];
+      bm = colorData[x][y+1];
+      br = colorData[x+1][y+1];
+      var pixels = [tl,tm,tr,ml,mr,bl,bm,br];
+      
+      for(let i=0;i<8;i++) {
+        if(colorData[x][y]!=pixels[i]) {
+          border = true
+          i=8;
+        }
+      }
+      if (border) {
+        ctx.fillStyle = 'brown';
+        ctx.fillRect(x*controlData.drawStep,y*controlData.drawStep,controlData.drawStep,controlData.drawStep);
+      } else {
+        //ctx.fillStyle = 'white';
+        //ctx.fillRect(x*controlData.drawStep,y*controlData.drawStep,controlData.drawStep,controlData.drawStep);
+      }
+
+    }
+  }  
+  //console.log("average:",avg/(width*height));
 }
 
 var joinMatrices = function(A, B, C, D) {
