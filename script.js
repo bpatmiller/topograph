@@ -3,10 +3,10 @@ var data;
 
 // declare controller datatype
 var controlTemplate = function() {
-  this.drawStep = 4;
-  this.scale = 7;
-  this.falloff = 0.4;
-  this.colors = 6;
+  this.drawStep = 1;
+  this.scale = 6;
+  this.falloff = 0.5;
+  this.colors = 22;
   // denotes how many colors/shades of grey can be seen
 }
 
@@ -71,16 +71,20 @@ var draw = function() {
   height = data.length;
   //var avg = 0;
   var colorData = data;
+  var colors = controlData.colors;
+  //
+  var peak = data[Math.floor(width * Math.random())][Math.floor(height * Math.random())];
 
   for(let x=0;x<width;x++) {
     for(let y=0;y<height;y++) {
-      var colors = controlData.colors;
+      //avg+=data[x][y];
       var col = colors * Math.floor((150/ colors)*data[x][y]);
       colorData[x][y] = col;
 
-      //avg+=data[x][y];
-      //ctx.fillStyle = 'rgb(' + col + ',' + col + ',' + col + ')';
-      //ctx.fillRect(x*controlData.drawStep,y*controlData.drawStep,controlData.drawStep,controlData.drawStep);
+      if (data[x][y] > peak) {
+        ctx.fillStyle = 'rgb(' + 209 + ',' + 239 + ',' + 177 + ')';
+        ctx.fillRect(x*controlData.drawStep,y*controlData.drawStep,controlData.drawStep,controlData.drawStep);
+      }
     }
   }
 
@@ -104,12 +108,9 @@ var draw = function() {
           i=8;
         }
       }
+      ctx.fillStyle = 'rgb(' + 118 + ',' + 50 + ',' + 39 + ')';
       if (border) {
-        ctx.fillStyle = 'brown';
         ctx.fillRect(x*controlData.drawStep,y*controlData.drawStep,controlData.drawStep,controlData.drawStep);
-      } else {
-        //ctx.fillStyle = 'white';
-        //ctx.fillRect(x*controlData.drawStep,y*controlData.drawStep,controlData.drawStep,controlData.drawStep);
       }
 
     }
